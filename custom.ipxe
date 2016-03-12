@@ -1,12 +1,65 @@
 #!ipxe
-###
-### netboot.xyz-custom menu
-###
 
-:start
-echo Hello world!
-sleep 10
+set custom_mirror http://netboot.etlr.io/images
+
+:custom
+clear custom_choice
+menu ${github_user}'s Custom Menu
+item --gap Oracle Linux
+item ol7 ${space} Oracle Linux 7
+item ol7_rescue ${space} Oracle Linux 7 (rescue)
+item --gap Windows Recovery Environments
+item winre_amd64 ${space} Windows Recovery Environment (WinRE - x64)
+# item winre_x86 ${space} Windows Recovery Environment (WinRE - x86)
+item --gap Windows Preinstallation Environments
+item winpe_amd64 ${space} Windows Preinstallation Environment (WinPE - x64)
+item winpe_x86 ${space} Windows Preinstallation Environment (WinPE - x86)
+choose custom_choice || goto custom_exit
+echo ${cls}
+goto ${custom_choice}
 goto custom_exit
 
+:ol7_rescue
+set params rescue ||
+goto ol7
+
+:ol7
+imgfree
+set ol7_path ${custom_mirror}/linux/ol7
+kernel ${ol7_path}/isolinux/vmlinuz inst.repo=${ol7_path} ${params} ${netcfg}
+initrd ${ol7_path}/isolinux/initrd.img
+boot || goto custom_exit
+
+:winre_amd64
+set win_arch amd64
+set win_type winre
+goto windows
+
+:winre_x86
+set win_arch x86
+set win_type winre
+goto windows
+
+:winpe_amd64
+set win_arch amd64
+set win_type winpe
+goto windows
+
+:winpe_x86
+set win_arch x86
+set win_type winpe
+goto windows
+
+:windows
+imgfree
+kernel ${custom_mirror}/windows/wimboot
+initrd ${custom_mirror}/windows/${win_type}/${win_arch}/bootmgr           bootmgr
+initrd ${custom_mirror}/windows/${win_type}/${win_arch}/boot/bcd          bcd
+initrd ${custom_mirror}/windows/${win_type}/${win_arch}/boot/boot.sdi     boot.sdi
+initrd ${custom_mirror}/windows/${win_type}/${win_arch}/sources/boot.wim  boot.wim
+boot || goto custom_exit
+
 :custom_exit
-exit 0
+clear menu
+chain https://boot.netboot.xyz/menu.ipxe
+exit
