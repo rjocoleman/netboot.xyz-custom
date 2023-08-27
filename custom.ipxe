@@ -7,7 +7,7 @@
 # Kairos Config: https://kairos.io/docs/reference/configuration/
 # 64-bit only
 
-goto ${menu}
+goto ${menu} ||
 
 :kairos
 set os Kairos
