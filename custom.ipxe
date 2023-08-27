@@ -1,78 +1,67 @@
 #!ipxe
 
-# Proxmox Open Source Products
-# https://www.proxmox.com
+# Kairos - Kubernetes-focused, Cloud Native Linux meta-distribution
+# https://kairos.io/
+# For further info on:
+# iPXE and Kairos: https://kairos.io/docs/installation/netboot/
+# Kairos Config: https://kairos.io/docs/reference/configuration/
+# 64-bit only
 
-goto ${menu} ||
+goto ${menu}
 
-:proxmox
-clear proxmox_choice
-clear proxmox_version
-set os Proxmox
+:kairos
+set os Kairos
+set kairos_mirror https://github.com/kairos-io/kairos/releases
+isset ${kairos_version} || set kairos_version v2.3.2
+isset ${kairos_flavor} || set kairos_flavor alpine-opensuse-leap
+isset ${kairos_image} || set kairos_image standard
 menu ${os}
-item --gap ${os} Backup Server
-item pbs-normal ${space} ${os} Backup Server 2.3-1
-item pbs-debug ${space} ${os} Backup Server 2.3-1 (Debug)
-item --gap ${os} Mail Gateway
-item pmg-normal ${space} ${os} Mail Gateway 7.2-1
-item pmg-debug ${space} ${os} Mail Gateway 7.2-1 (Debug)
-item --gap ${os} VE
-item pve-normal ${space} ${os} VE 7.3-1
-item pve-debug ${space} ${os} VE 7.3-1 (Debug)
-choose proxmox_choice || goto proxmox_exit
-goto ${proxmox_choice}
+menu ${os} install
+item --gap Kairos:
+item kairos_boot ${space} Begin install ${os} ${kairos_version}
+item --gap Parameters:
+item kairos_version_custom ${space} ${os} version: ${kairos_version}
+item kairos_flavor ${space} Select Flavor (default: ${kairos_flavor})
+item kairos_image ${space} Select Image (default: ${kairos_image})
+choose --default ${menu} menu || goto kairos_exit
+echo ${cls}
+goto ${menu} ||
+goto kairos_exit
 
-:pve-normal
-set params splash=silent
-goto boot-pve
+:kairos_flavor
+echo -n Set flavor:  && read kairos_flavor
+clear menu
+goto kairos
 
-:pve-debug
-set params splash=verbose proxdebug
-goto boot-pve
+:kairos_image
+echo -n Set image:  && read kairos_image
+clear menu
+goto kairos
 
-:pmg-normal
-set params splash=silent
-goto boot-pmg
+:kairos_version_custom
+clear kairos_version
+echo -n Please set Kairos version manually (in format vX.Y.Z):  && read kairos_version
+set kairos_base_url ${kairos_mirror}/download/${kairos_version}
+clear menu
+goto kairos
 
-:pmg-debug
-set params splash=verbose proxdebug
-goto boot-pmg
+:kairos_config_url
+echo -n Set config_url:  && read kairos_config_url
+set kairos_params config_url=${kairos_config_url}
+clear menu
+goto kairos
 
-:pbs-normal
-set params splash=silent
-goto boot-pbs
-
-:pbs-debug
-set params splash=verbose proxdebug
-goto boot-pbs
-
-:boot-pbs
-set kernel_url ${live_endpoint}/asset-mirror/releases/download/2.3-1-09769528/
-set proxmox_version 2.3-1
-imgfree
-kernel ${kernel_url}vmlinuz vga=791 video=vesafb:ywrap,mtrr ramdisk_size=16777216 rw quiet ${params} initrd=initrd.magic ${cmdline}
-initrd ${kernel_url}initrd
-initrd http://na.cdn.proxmox.com/iso/proxmox-backup-server_${proxmox_version}.iso /proxmox.iso
+:kairos_boot
+set kairos_image_name ${kairos_image}
+iseq ${kairos_image_name} standard && set kairos_image_name kairos ||
+set base-url ${kairos_mirror}/download/${kairos_version}
+set kernel ${kairos_image_name}-${kairos_flavor}-${kairos_version}-kernel
+set initrd ${kairos_image_name}-${kairos_flavor}-${kairos_version}-initrd
+set rootfs ${kairos_image_name}-${kairos_flavor}-${kairos_version}.squashfs
+kernel ${base-url}/${kernel} initrd=${initrd} rd.neednet=1 ip=dhcp rd.cos.disable root=live:${base-url}/${rootfs} netboot nodepair.enable ${kairos_params} console=tty1 console=ttyS0 ${cmdline}
+initrd ${base-url}/${initrd}
 boot
 
-:boot-pmg
-set kernel_url ${live_endpoint}/asset-mirror/releases/download/7.2-1-5c9b0cd6/
-set proxmox_version 7.2-1
-imgfree
-kernel ${kernel_url}vmlinuz vga=791 video=vesafb:ywrap,mtrr ramdisk_size=16777216 rw quiet ${params} initrd=initrd.magic ${cmdline}
-initrd ${kernel_url}initrd
-initrd http://na.cdn.proxmox.com/iso/proxmox-mailgateway_${proxmox_version}.iso /proxmox.iso
-boot
-
-:boot-pve
-set kernel_url ${live_endpoint}/asset-mirror/releases/download/7.3-1-9402a564/
-set proxmox_version 7.3-1
-imgfree
-kernel ${kernel_url}vmlinuz vga=791 video=vesafb:ywrap,mtrr ramdisk_size=16777216 rw quiet ${params} initrd=initrd.magic ${cmdline}
-initrd ${kernel_url}initrd
-initrd http://na.cdn.proxmox.com/iso/proxmox-ve_${proxmox_version}.iso /proxmox.iso
-boot
-
-:proxmox_exit
+:kairos_exit
 clear menu
 exit 0
