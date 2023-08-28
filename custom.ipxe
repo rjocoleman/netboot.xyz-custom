@@ -53,6 +53,9 @@ clear menu
 goto kairos
 
 :kairos_boot
+# Configure interface
+ifconf
+
 set kairos_image_name ${kairos_image}
 iseq ${kairos_image_name} standard && set kairos_image_name kairos ||
 set base-url ${kairos_mirror}/download/${kairos_version}
