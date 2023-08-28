@@ -7,6 +7,9 @@
 # Kairos Config: https://kairos.io/docs/reference/configuration/
 # 64-bit only
 
+isset ${dhcp-server} && set ipparam ip=dhcp || set ipparam ip=${ip}::${gateway}:${netmask}:::none nameserver=${dns}
+set ipparam BOOTIF=${netX/mac} ${ipparam}
+
 goto ${menu} ||
 
 :kairos
@@ -53,8 +56,6 @@ clear menu
 goto kairos
 
 :kairos_boot
-isset ${dhcp-server} && set ipparam ip=dhcp || set ipparam ip=${ip}::${gateway}:${netmask}:::none nameserver=${dns}
-set ipparam BOOTIF=${netX/mac} ${ipparam}
 set kairos_image_name ${kairos_image}
 iseq ${kairos_image_name} standard && set kairos_image_name kairos ||
 set base-url ${kairos_mirror}/download/${kairos_version}
@@ -62,7 +63,7 @@ set kernel ${kairos_image_name}-${kairos_flavor}-${kairos_version}-kernel
 set initrd ${kairos_image_name}-${kairos_flavor}-${kairos_version}-initrd
 set rootfs ${kairos_image_name}-${kairos_flavor}-${kairos_version}.squashfs
 imgfree
-kernel ${base-url}/${kernel} initrd=${initrd} rd.neednet=1 rd.cos.disable ${ipparam} xroot=live:${base-url}/${rootfs} netboot nodepair.enable ${kairos_params} console=tty1 console=ttyS0 ${cmdline}
+kernel ${base-url}/${kernel} initrd=${initrd} rd.neednet=1 rd.cos.disable ${ipparam} root=live:${base-url}/${rootfs} netboot nodepair.enable ${kairos_params} console=tty1 console=ttyS0 ${cmdline}
 initrd ${base-url}/${initrd}
 boot
 
