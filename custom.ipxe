@@ -62,7 +62,7 @@ set kernel ${kairos_image_name}-${kairos_flavor}-${kairos_version}-kernel
 set initrd ${kairos_image_name}-${kairos_flavor}-${kairos_version}-initrd
 set rootfs ${kairos_image_name}-${kairos_flavor}-${kairos_version}.squashfs
 imgfree
-kernel ${base-url}/${kernel} initrd=${initrd} rd.neednet=1 ip=dhcp rd.cos.disable ${ipparam} xroot=live:${base-url}/${rootfs} netboot nodepair.enable ${kairos_params} console=tty1 console=ttyS0 ${cmdline}
+kernel ${base-url}/${kernel} initrd=${initrd} rd.neednet=1 rd.cos.disable ${ipparam} xroot=live:${base-url}/${rootfs} netboot nodepair.enable ${kairos_params} console=tty1 console=ttyS0 ${cmdline}
 initrd ${base-url}/${initrd}
 boot
 
