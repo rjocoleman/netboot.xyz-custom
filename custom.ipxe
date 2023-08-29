@@ -25,6 +25,7 @@ item --gap Kairos:
 item kairos_boot ${space} Begin install ${os} ${kairos_version}
 item --gap Parameters:
 item kairos_version_custom ${space} ${os} version: ${kairos_version}
+item kairos_provider_version ${space} Set provider version: ${kairos_provider_version}
 item kairos_flavor ${space} Select Flavor (default: ${kairos_flavor})
 item kairos_image ${space} Select Image (default: ${kairos_image})
 item kairos_config_url ${space} Set config URL: ${kairos_config_url}
