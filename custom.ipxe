@@ -14,8 +14,8 @@ goto ${menu} ||
 
 :kairos
 set os Kairos
-set kairos_mirror https://github.com/kairos-io/kairos/releases
-isset ${kairos_version} || set kairos_version v2.3.2
+isset ${kairos_mirror} || set kairos_mirror kairos-io/provider-kairos
+isset ${kairos_version} || set kairos_version v2.3.1-k3sv1.27.3+k3s1
 isset ${kairos_flavor} || set kairos_flavor alpine-opensuse-leap
 isset ${kairos_image} || set kairos_image standard
 menu ${os}
@@ -27,6 +27,7 @@ item kairos_version_custom ${space} ${os} version: ${kairos_version}
 item kairos_flavor ${space} Select Flavor (default: ${kairos_flavor})
 item kairos_image ${space} Select Image (default: ${kairos_image})
 item kairos_config_url ${space} Set config URL: ${kairos_config_url}
+item kairos_mirror ${space} Set Kairos Github repo: ${kairos_mirror}
 choose --default ${menu} menu || goto kairos_exit
 echo ${cls}
 goto ${menu} ||
@@ -39,6 +40,11 @@ goto kairos
 
 :kairos_image
 echo -n Set image:  && read kairos_image
+clear menu
+goto kairos
+
+:kairos_mirror
+echo -n Set mirror Github repo:  && read kairos_mirror
 clear menu
 goto kairos
 
@@ -58,7 +64,7 @@ goto kairos
 :kairos_boot
 set kairos_image_name ${kairos_image}
 iseq ${kairos_image_name} standard && set kairos_image_name kairos ||
-set base-url ${kairos_mirror}/download/${kairos_version}
+set base-url https://github.com/${kairos_mirror}/releases/download/${kairos_version}
 set kernel ${kairos_image_name}-${kairos_flavor}-${kairos_version}-kernel
 set initrd ${kairos_image_name}-${kairos_flavor}-${kairos_version}-initrd
 set rootfs ${kairos_image_name}-${kairos_flavor}-${kairos_version}.squashfs
