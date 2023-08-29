@@ -15,7 +15,8 @@ goto ${menu} ||
 :kairos
 set os Kairos
 isset ${kairos_mirror} || set kairos_mirror kairos-io/provider-kairos
-isset ${kairos_version} || set kairos_version v2.3.1-k3sv1.27.3+k3s1
+isset ${kairos_version} || set kairos_version v2.3.1
+isset ${kairos_provider_version} || set kairos_provider_version k3sv1.27.3+k3s1
 isset ${kairos_flavor} || set kairos_flavor alpine-opensuse-leap
 isset ${kairos_image} || set kairos_image standard
 menu ${os}
@@ -48,6 +49,11 @@ echo -n Set mirror Github repo:  && read kairos_mirror
 clear menu
 goto kairos
 
+:kairos_provider_version
+echo -n Set provider version:  && read kairos_provider_version
+clear menu
+goto kairos
+
 :kairos_version_custom
 clear kairos_version
 echo -n Please set Kairos version manually (in format vX.Y.Z):  && read kairos_version
@@ -64,10 +70,11 @@ goto kairos
 :kairos_boot
 set kairos_image_name ${kairos_image}
 iseq ${kairos_image_name} standard && set kairos_image_name kairos ||
+isset ${kairos_provider_version} && set kairos_provider_version -${kairos_provider_version} || set kairos_provider_version
 set base-url https://github.com/${kairos_mirror}/releases/download/${kairos_version}
-set kernel ${kairos_image_name}-${kairos_flavor}-${kairos_version}-kernel
-set initrd ${kairos_image_name}-${kairos_flavor}-${kairos_version}-initrd
-set rootfs ${kairos_image_name}-${kairos_flavor}-${kairos_version}.squashfs
+set kernel ${kairos_image_name}-${kairos_flavor}-${kairos_version}${kairos_provider_version}-kernel
+set initrd ${kairos_image_name}-${kairos_flavor}-${kairos_version}${kairos_provider_version}-initrd
+set rootfs ${kairos_image_name}-${kairos_flavor}-${kairos_version}${kairos_provider_version}.squashfs
 imgfree
 kernel ${base-url}/${kernel} initrd=${initrd} rd.neednet=1 rd.cos.disable ${ipparam} root=live:${base-url}/${rootfs} netboot nodepair.enable ${kairos_params} console=tty1 console=ttyS0 ${cmdline}
 initrd ${base-url}/${initrd}
