@@ -1,86 +1,27 @@
 #!ipxe
+###
+### netboot.xyz-custom menu
+###
 
-# Kairos - Kubernetes-focused, Cloud Native Linux meta-distribution
-# https://kairos.io/
-# For further info on:
-# iPXE and Kairos: https://kairos.io/docs/installation/netboot/
-# Kairos Config: https://kairos.io/docs/reference/configuration/
-# 64-bit only
+# sfp-unlocker - remove the SFP vendor lock on Intel ixgbe NICs
+# https://github.com/rjocoleman/sfp-unlocker
+# latest/download always tracks the newest release.
+# Pin a tag with /releases/download/<tag>/ if you want a fixed version.
+set sfp_base https://github.com/rjocoleman/sfp-unlocker/releases/latest/download
 
-isset ${dhcp-server} && set ipparam ip=dhcp || set ipparam ip=${ip}::${gateway}:${netmask}:::none nameserver=${dns}
-set ipparam BOOTIF=${netX/mac} ${ipparam}
-
-goto ${menu} ||
-
-:kairos
-set os Kairos
-isset ${kairos_mirror} || set kairos_mirror kairos-io/provider-kairos
-isset ${kairos_version} || set kairos_version v2.3.1
-isset ${kairos_provider_version} || set kairos_provider_version k3sv1.27.3+k3s1
-isset ${kairos_flavor} || set kairos_flavor alpine-opensuse-leap
-isset ${kairos_image} || set kairos_image standard
-menu ${os}
-menu ${os} install
-item --gap Kairos:
-item kairos_boot ${space} Begin install ${os} ${kairos_version}
-item --gap Parameters:
-item kairos_version_custom ${space} ${os} version: ${kairos_version}
-item kairos_provider_version ${space} Set provider version: ${kairos_provider_version}
-item kairos_flavor ${space} Select Flavor (default: ${kairos_flavor})
-item kairos_image ${space} Select Image (default: ${kairos_image})
-item kairos_config_url ${space} Set config URL: ${kairos_config_url}
-item kairos_mirror ${space} Set Kairos Github repo: ${kairos_mirror}
-choose --default ${menu} menu || goto kairos_exit
+:custom_menu_items
+clear custom_choice
+menu netboot.xyz-custom
+item --gap Tools:
+item sfp_unlocker ${space} SFP unlocker (Intel ixgbe)
+choose custom_choice || goto custom_exit
 echo ${cls}
-goto ${menu} ||
-goto kairos_exit
+goto ${custom_choice} || goto custom_exit
 
-:kairos_flavor
-echo -n Set flavor:  && read kairos_flavor
-clear menu
-goto kairos
+:sfp_unlocker
+echo Booting SFP unlocker...
+chain ${sfp_base}/sfp.ipxe || goto custom_exit
 
-:kairos_image
-echo -n Set image:  && read kairos_image
-clear menu
-goto kairos
-
-:kairos_mirror
-echo -n Set mirror Github repo:  && read kairos_mirror
-clear menu
-goto kairos
-
-:kairos_provider_version
-echo -n Set provider version:  && read kairos_provider_version
-clear menu
-goto kairos
-
-:kairos_version_custom
-clear kairos_version
-echo -n Please set Kairos version manually (in format vX.Y.Z):  && read kairos_version
-set kairos_base_url ${kairos_mirror}/download/${kairos_version}
-clear menu
-goto kairos
-
-:kairos_config_url
-echo -n Set config_url:  && read kairos_config_url
-set kairos_params config_url=${kairos_config_url}
-clear menu
-goto kairos
-
-:kairos_boot
-set kairos_image_name ${kairos_image}
-iseq ${kairos_image_name} standard && set kairos_image_name kairos ||
-isset ${kairos_provider_version} && set kairos_provider_version -${kairos_provider_version} || set kairos_provider_version
-set base-url https://github.com/${kairos_mirror}/releases/download/${kairos_version}
-set kernel ${kairos_image_name}-${kairos_flavor}-${kairos_version}${kairos_provider_version}-kernel
-set initrd ${kairos_image_name}-${kairos_flavor}-${kairos_version}${kairos_provider_version}-initrd
-set rootfs ${kairos_image_name}-${kairos_flavor}-${kairos_version}${kairos_provider_version}.squashfs
-imgfree
-kernel ${base-url}/${kernel} initrd=${initrd} rd.neednet=1 rd.cos.disable ${ipparam} root=live:${base-url}/${rootfs} netboot nodepair.enable ${kairos_params} console=tty1 console=ttyS0 ${cmdline}
-initrd ${base-url}/${initrd}
-boot
-
-:kairos_exit
-clear menu
+:custom_exit
+chain utils.ipxe ||
 exit 0
